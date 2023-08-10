@@ -19,42 +19,31 @@ jobs:
         with:
           ref: ${{ github.event.inputs.git-ref }}
 
-      - name: Testing
-        run: |
-          tag="${{ github.event.inputs.git-ref }}"
-          echo "$tag"
-          echo "${{ github.sha }}"
+      - name: Get versions
+        id: versions
+        run:
+          sed 's/ /=/' .tool-versions | tee -a "$GITHUB_OUTPUT"
 
-#       - name: Get versions
-#         id: versions
-#         run:
-#           sed 's/ /=/' .tool-versions | tee -a "$GITHUB_OUTPUT"
-#
-#       - name: Set up Go
-#         uses: actions/setup-go@v4
-#         with:
-#           go-version: ${{ steps.versions.outputs.golang }}
-#
-#       - name: Test
-#         run: make test
-#
-#       - name: Build
-#         run: make docker
-#
-#       - name: Log in to the Container registry
-#         uses: docker/login-action@v2
-#         with:
-#           registry: ${{ env.REGISTRY }}
-#           username: ${{ github.actor }}
-#           password: ${{ secrets.GITHUB_TOKEN }}
-#
-#       - name: Push Docker images to GHCR and DockerHub
-#         run: |
-#           tag="${{ github.event.inputs.git-ref }}"
-#           echo "$tag"
-#           if [[ $tag == master ]]; then
-#             tag=latest
-#             docker tag httpbun "${{ secrets.DOCKER_HUB_USERNAME }}/httpbun:${{ github.sha }}"
-#           fi
-#           docker tag httpbun "ghcr.io/${{ github.actor }}/httpbun:$tag"
-#           docker push --all-tags "ghcr.io/${{ github.actor }}/httpbun"
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ steps.versions.outputs.golang }}
+
+      - name: Test
+        run: make test
+
+      - name: Build
+        run: make docker
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push Docker images to GHCR and DockerHub
+        run: |
+          docker tag httpbun "ghcr.io/${{ github.actor }}/httpbun:${{ github.event.inputs.git-ref }}"
+          docker tag httpbun "ghcr.io/${{ github.actor }}/httpbun:latest"
+          docker push --all-tags "ghcr.io/${{ github.actor }}/httpbun"

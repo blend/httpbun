@@ -2,13 +2,15 @@ package server
 
 import (
 	"context"
-	"github.com/sharat87/httpbun/bun"
-	"github.com/sharat87/httpbun/info"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"time"
+
+	proxyproto "github.com/armon/go-proxyproto"
+	"github.com/sharat87/httpbun/bun"
+	"github.com/sharat87/httpbun/info"
 )
 
 type Config struct {
@@ -67,9 +69,15 @@ func StartNew(config Config) Server {
 		Handler: m,
 	}
 
-	listener, err := net.Listen("tcp", config.BindTarget)
+	var listener net.Listener
+	l, err := net.Listen("tcp", config.BindTarget)
 	if err != nil {
 		log.Fatalf("Error listening on %q: %v", config.BindTarget, err)
+	}
+	if os.Getenv("HTTPBUN_USE_PROXY_PROTOCOL") == "true" {
+		listener = &proxyproto.Listener{Listener: l}
+	} else {
+		listener = l
 	}
 
 	closeCh := make(chan error, 1)
