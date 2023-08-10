@@ -46,4 +46,4 @@ jobs:
         run: |
           docker tag httpbun "ghcr.io/blend/httpbun:${{ github.event.inputs.git-ref }}"
           docker tag httpbun "ghcr.io/blend/httpbun:latest"
-          docker push --all-tags "ghcr.io/${{ github.actor }}/httpbun"
+          docker push --all-tags "ghcr.io/blend/httpbun"
